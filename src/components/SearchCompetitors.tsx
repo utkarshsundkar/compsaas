@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { Search, ExternalLink, DollarSign } from 'lucide-react';
+import { Search, ExternalLink, DollarSign, Globe, Linkedin, Twitter } from 'lucide-react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 interface Competitor {
@@ -11,6 +11,8 @@ interface Competitor {
   description: string;
   url?: string;
   pricing?: string;
+  linkedin?: string;
+  twitter?: string;
 }
 
 const GEMINI_API_KEY = "AIzaSyBz-z_wmd2rvquybWz3p74JJY_G-zCCqds";
@@ -30,7 +32,7 @@ export const SearchCompetitors = () => {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-      const prompt = `Find 5 main competitors for ${query}. Return ONLY a JSON array with objects containing name, description, url, and pricing fields. Include their pricing plans or pricing range if available. Keep descriptions under 100 words. Do not include any markdown formatting or code blocks.`;
+      const prompt = `Find 5 main competitors for ${query}. Return ONLY a JSON array with objects containing name, description, url, pricing, linkedin, and twitter fields. Include their pricing plans, website URL, LinkedIn and Twitter profiles if available. Keep descriptions under 100 words. Do not include any markdown formatting or code blocks.`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
@@ -39,7 +41,6 @@ export const SearchCompetitors = () => {
       console.log('Gemini response:', text);
       
       try {
-        // Remove any potential markdown formatting
         const cleanJson = text.replace(/```json\n|\n```/g, '').trim();
         const parsedCompetitors = JSON.parse(cleanJson);
         console.log('Parsed competitors:', parsedCompetitors);
@@ -110,17 +111,41 @@ export const SearchCompetitors = () => {
                     <span>{competitor.pricing}</span>
                   </div>
                 )}
-                {competitor.url && (
-                  <a
-                    href={competitor.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-blue-600 hover:text-blue-800"
-                  >
-                    Visit Website
-                    <ExternalLink className="w-4 h-4 ml-1" />
-                  </a>
-                )}
+                <div className="flex flex-wrap gap-3">
+                  {competitor.url && (
+                    <a
+                      href={competitor.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-blue-600 hover:text-blue-800"
+                    >
+                      <Globe className="w-4 h-4 mr-1" />
+                      Website
+                    </a>
+                  )}
+                  {competitor.linkedin && (
+                    <a
+                      href={competitor.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-blue-600 hover:text-blue-800"
+                    >
+                      <Linkedin className="w-4 h-4 mr-1" />
+                      LinkedIn
+                    </a>
+                  )}
+                  {competitor.twitter && (
+                    <a
+                      href={competitor.twitter}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-blue-600 hover:text-blue-800"
+                    >
+                      <Twitter className="w-4 h-4 mr-1" />
+                      Twitter
+                    </a>
+                  )}
+                </div>
               </Card>
             ))
           )}
