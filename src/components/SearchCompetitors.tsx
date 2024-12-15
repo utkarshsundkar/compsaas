@@ -3,13 +3,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { Search, ExternalLink } from 'lucide-react';
+import { Search, ExternalLink, DollarSign } from 'lucide-react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 interface Competitor {
   name: string;
   description: string;
   url?: string;
+  pricing?: string;
 }
 
 const GEMINI_API_KEY = "AIzaSyBz-z_wmd2rvquybWz3p74JJY_G-zCCqds";
@@ -29,7 +30,7 @@ export const SearchCompetitors = () => {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-      const prompt = `Find 5 main competitors for ${query}. Return ONLY a JSON array with objects containing name, description, and url fields. Keep descriptions under 100 words. Do not include any markdown formatting or code blocks.`;
+      const prompt = `Find 5 main competitors for ${query}. Return ONLY a JSON array with objects containing name, description, url, and pricing fields. Include their pricing plans or pricing range if available. Keep descriptions under 100 words. Do not include any markdown formatting or code blocks.`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
@@ -103,6 +104,12 @@ export const SearchCompetitors = () => {
               >
                 <h3 className="text-xl font-semibold mb-2">{competitor.name}</h3>
                 <p className="text-gray-600 mb-4">{competitor.description}</p>
+                {competitor.pricing && (
+                  <div className="flex items-center text-green-600 mb-4">
+                    <DollarSign className="w-4 h-4 mr-1" />
+                    <span>{competitor.pricing}</span>
+                  </div>
+                )}
                 {competitor.url && (
                   <a
                     href={competitor.url}
