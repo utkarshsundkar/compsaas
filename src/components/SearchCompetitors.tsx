@@ -6,11 +6,16 @@ import { useToast } from "@/components/ui/use-toast";
 import { Search, ExternalLink, DollarSign, Globe, Linkedin, Twitter } from 'lucide-react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+interface PricingInfo {
+  plan?: string;
+  price?: string;
+}
+
 interface Competitor {
   name: string;
   description: string;
   url?: string;
-  pricing?: string;
+  pricing?: string | PricingInfo;
   linkedin?: string;
   twitter?: string;
 }
@@ -32,7 +37,7 @@ export const SearchCompetitors = () => {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-      const prompt = `Find 5 main competitors for ${query}. Return ONLY a JSON array with objects containing name, description, url, pricing, linkedin, and twitter fields. Include their pricing plans, website URL, LinkedIn and Twitter profiles if available. Keep descriptions under 100 words. Do not include any markdown formatting or code blocks.`;
+      const prompt = `Find 5 main competitors for ${query}. Return ONLY a JSON array with objects containing name, description, url, pricing, linkedin, and twitter fields. Include their pricing plans, website URL, LinkedIn and Twitter profiles if available. Keep descriptions under 100 words. The pricing should be a string. Do not include any markdown formatting or code blocks.`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
@@ -68,6 +73,20 @@ export const SearchCompetitors = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const renderPricing = (pricing: string | PricingInfo | undefined) => {
+    if (!pricing) return null;
+    
+    if (typeof pricing === 'string') {
+      return pricing;
+    }
+    
+    if (pricing.plan && pricing.price) {
+      return `${pricing.plan}: ${pricing.price}`;
+    }
+    
+    return null;
   };
 
   return (
@@ -108,7 +127,7 @@ export const SearchCompetitors = () => {
                 {competitor.pricing && (
                   <div className="flex items-center text-green-600 mb-4">
                     <DollarSign className="w-4 h-4 mr-1" />
-                    <span>{competitor.pricing}</span>
+                    <span>{renderPricing(competitor.pricing)}</span>
                   </div>
                 )}
                 <div className="flex flex-wrap gap-3">
