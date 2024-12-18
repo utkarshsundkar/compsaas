@@ -3,8 +3,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { Search, ExternalLink, DollarSign, Globe, Linkedin, Twitter } from 'lucide-react';
+import { Search, ExternalLink, DollarSign, Globe, Linkedin, Twitter, FileDown } from 'lucide-react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import jsPDF from 'jspdf';
 
 interface PricingInfo {
   plan?: string;
@@ -89,21 +90,97 @@ export const SearchCompetitors = () => {
     return null;
   };
 
+  const exportToPDF = () => {
+    const pdf = new jsPDF();
+    let yPos = 20;
+
+    // Add title
+    pdf.setFontSize(20);
+    pdf.text('Competitor Analysis Report', 20, yPos);
+    yPos += 20;
+
+    // Add search query
+    pdf.setFontSize(12);
+    pdf.text(`Analysis for: ${query}`, 20, yPos);
+    yPos += 20;
+
+    competitors.forEach((competitor, index) => {
+      if (yPos > 250) {
+        pdf.addPage();
+        yPos = 20;
+      }
+
+      pdf.setFontSize(14);
+      pdf.text(`${index + 1}. ${competitor.name}`, 20, yPos);
+      yPos += 10;
+
+      pdf.setFontSize(12);
+      // Split description into multiple lines
+      const descLines = pdf.splitTextToSize(competitor.description, 170);
+      pdf.text(descLines, 20, yPos);
+      yPos += descLines.length * 7;
+
+      if (competitor.pricing) {
+        pdf.text(`Pricing: ${renderPricing(competitor.pricing)}`, 20, yPos);
+        yPos += 7;
+      }
+
+      if (competitor.url) {
+        pdf.text(`Website: ${competitor.url}`, 20, yPos);
+        yPos += 7;
+      }
+
+      yPos += 10; // Add space between competitors
+    });
+
+    pdf.save('competitor-analysis.pdf');
+    
+    toast({
+      title: "PDF Exported",
+      description: "Your competitor analysis has been downloaded",
+    });
+  };
+
   return (
-    <div className="min-h-screen p-6 bg-gradient-to-br from-blue-500 to-purple-600">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold text-white text-center mb-8">
-          Competitor Research Tool
-        </h1>
-        
+    <div className="min-h-screen bg-white">
+      {/* Header Section */}
+      <div className="bg-black text-white py-8 px-6 mb-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <Search className="w-8 h-8 mr-3" />
+              <h1 className="text-3xl font-bold">Know Your Competitor</h1>
+            </div>
+            {competitors.length > 0 && (
+              <Button
+                onClick={exportToPDF}
+                variant="outline"
+                className="bg-white text-black hover:bg-gray-100"
+              >
+                <FileDown className="w-4 h-4 mr-2" />
+                Export PDF
+              </Button>
+            )}
+          </div>
+          <p className="text-gray-300 text-lg">
+            Discover and analyze your competition with our powerful research tool
+          </p>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-6">
         <form onSubmit={searchCompetitors} className="flex gap-2 mb-8">
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Enter company name or website..."
-            className="bg-white/90 border-0"
+            className="bg-white border-2 border-black"
           />
-          <Button type="submit" disabled={isLoading}>
+          <Button 
+            type="submit" 
+            disabled={isLoading}
+            className="bg-black text-white hover:bg-gray-800"
+          >
             <Search className="w-4 h-4 mr-2" />
             {isLoading ? 'Searching...' : 'Search'}
           </Button>
@@ -112,7 +189,7 @@ export const SearchCompetitors = () => {
         <div className="grid gap-4 md:grid-cols-2">
           {isLoading ? (
             Array(4).fill(0).map((_, i) => (
-              <Card key={i} className="p-6 animate-pulse">
+              <Card key={i} className="p-6 animate-pulse bg-gray-100">
                 <div className="h-20 bg-gray-200 rounded"></div>
               </Card>
             ))
@@ -120,12 +197,12 @@ export const SearchCompetitors = () => {
             competitors.map((competitor, index) => (
               <Card 
                 key={index}
-                className="p-6 bg-white/90 backdrop-blur-sm hover:shadow-lg transition-shadow"
+                className="p-6 bg-black text-white hover:shadow-lg transition-shadow"
               >
                 <h3 className="text-xl font-semibold mb-2">{competitor.name}</h3>
-                <p className="text-gray-600 mb-4">{competitor.description}</p>
+                <p className="text-gray-300 mb-4">{competitor.description}</p>
                 {competitor.pricing && (
-                  <div className="flex items-center text-green-600 mb-4">
+                  <div className="flex items-center text-green-400 mb-4">
                     <DollarSign className="w-4 h-4 mr-1" />
                     <span>{renderPricing(competitor.pricing)}</span>
                   </div>
@@ -136,7 +213,7 @@ export const SearchCompetitors = () => {
                       href={competitor.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center text-blue-600 hover:text-blue-800"
+                      className="inline-flex items-center text-blue-300 hover:text-blue-400"
                     >
                       <Globe className="w-4 h-4 mr-1" />
                       Website
@@ -147,7 +224,7 @@ export const SearchCompetitors = () => {
                       href={competitor.linkedin}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center text-blue-600 hover:text-blue-800"
+                      className="inline-flex items-center text-blue-300 hover:text-blue-400"
                     >
                       <Linkedin className="w-4 h-4 mr-1" />
                       LinkedIn
@@ -158,7 +235,7 @@ export const SearchCompetitors = () => {
                       href={competitor.twitter}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center text-blue-600 hover:text-blue-800"
+                      className="inline-flex items-center text-blue-300 hover:text-blue-400"
                     >
                       <Twitter className="w-4 h-4 mr-1" />
                       Twitter
