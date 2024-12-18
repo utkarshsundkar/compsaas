@@ -1,4 +1,4 @@
-import { DollarSign, Globe, Linkedin, Twitter } from 'lucide-react';
+import { DollarSign, Globe, Linkedin, Twitter, Calendar, Users, Gift, Layers, PiggyBank } from 'lucide-react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Competitor } from '../types/competitor';
@@ -27,13 +27,42 @@ export const CompetitorCard = ({ competitor }: CompetitorCardProps) => {
       <h3 className="text-xl font-semibold mb-2">{competitor.name}</h3>
       <p className="text-gray-300 mb-4">{competitor.description}</p>
       
-      {competitor.pricing && (
-        <div className="flex items-center text-green-400 mb-4">
-          <DollarSign className="w-4 h-4 mr-1" />
-          <span>{renderPricing(competitor.pricing)}</span>
+      {/* Basic Company Information */}
+      <div className="space-y-4 mb-6">
+        <div className="flex items-center gap-2 text-gray-300">
+          <Calendar className="w-4 h-4" />
+          <span>Founded: 2018</span>
         </div>
-      )}
+        
+        <div className="flex items-center gap-2 text-gray-300">
+          <Users className="w-4 h-4" />
+          <span>Founders: John Doe, Jane Smith</span>
+        </div>
+        
+        <div className="flex items-center gap-2 text-green-400">
+          <Gift className="w-4 h-4" />
+          <span>Gold Subscription Available: Free Delivery</span>
+        </div>
+        
+        <div className="flex items-center gap-2 text-gray-300">
+          <Layers className="w-4 h-4" />
+          <span>Services: AI Solutions, Data Analytics, Cloud Services</span>
+        </div>
+        
+        <div className="flex items-center gap-2 text-green-400">
+          <PiggyBank className="w-4 h-4" />
+          <span>Total Funding: $50M Series B</span>
+        </div>
 
+        {competitor.pricing && (
+          <div className="flex items-center text-green-400">
+            <DollarSign className="w-4 h-4 mr-1" />
+            <span>{renderPricing(competitor.pricing)}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Premium Analysis Sections (Blurred) */}
       <div className="space-y-4 mb-6">
         <div className="backdrop-blur-sm bg-white/10 p-4 rounded-lg">
           <h4 className="font-semibold mb-2">SWOT Analysis</h4>
