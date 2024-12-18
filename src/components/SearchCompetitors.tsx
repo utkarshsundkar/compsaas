@@ -87,15 +87,40 @@ export const SearchCompetitors = () => {
     });
   };
 
+  const scrollToSearch = () => {
+    const searchSection = document.getElementById('search-section');
+    searchSection?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-white">
-      {/* Header Section */}
-      <div className="bg-black text-white py-8 px-6 mb-8">
+      {/* Hero Section */}
+      <div className="min-h-screen flex flex-col items-center justify-center text-center px-4 bg-gradient-to-br from-gray-50 to-white">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <Search className="w-10 h-10" />
+            <h1 className="text-4xl font-bold">Know Your Competitor</h1>
+          </div>
+          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            Stop searching everywhere for competitor analysis. Get instant insights about your competitors right here. Our AI-powered tool helps you understand your market better.
+          </p>
+          <Button 
+            onClick={scrollToSearch}
+            size="lg"
+            className="bg-black text-white hover:bg-gray-800"
+          >
+            Try Now
+          </Button>
+        </div>
+      </div>
+
+      {/* Search Section */}
+      <div id="search-section" className="py-16 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <Search className="w-8 h-8 mr-3" />
-              <h1 className="text-3xl font-bold">Know Your Competitor</h1>
+              <h2 className="text-2xl font-bold">Search Competitors</h2>
             </div>
             {competitors.length > 0 && (
               <Button
@@ -108,89 +133,84 @@ export const SearchCompetitors = () => {
               </Button>
             )}
           </div>
-          <p className="text-gray-300 text-lg">
-            Discover and analyze your competition with our powerful research tool
-          </p>
-        </div>
-      </div>
 
-      <div className="max-w-4xl mx-auto px-6">
-        <form onSubmit={searchCompetitors} className="flex gap-2 mb-8">
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Enter company name or website..."
-            className="bg-white border-2 border-black"
-          />
-          <Button 
-            type="submit" 
-            disabled={isLoading}
-            className="bg-black text-white hover:bg-gray-800"
-          >
-            <Search className="w-4 h-4 mr-2" />
-            {isLoading ? 'Searching...' : 'Search'}
-          </Button>
-        </form>
+          <form onSubmit={searchCompetitors} className="flex gap-2 mb-8">
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Enter company name or website..."
+              className="bg-white border-2 border-black"
+            />
+            <Button 
+              type="submit" 
+              disabled={isLoading}
+              className="bg-black text-white hover:bg-gray-800"
+            >
+              <Search className="w-4 h-4 mr-2" />
+              {isLoading ? 'Searching...' : 'Search'}
+            </Button>
+          </form>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          {isLoading ? (
-            Array(4).fill(0).map((_, i) => (
-              <Card key={i} className="p-6 animate-pulse bg-gray-100">
-                <div className="h-20 bg-gray-200 rounded"></div>
-              </Card>
-            ))
-          ) : (
-            competitors.map((competitor, index) => (
-              <Card 
-                key={index}
-                className="p-6 bg-black text-white hover:shadow-lg transition-shadow"
-              >
-                <h3 className="text-xl font-semibold mb-2">{competitor.name}</h3>
-                <p className="text-gray-300 mb-4">{competitor.description}</p>
-                {competitor.pricing && (
-                  <div className="flex items-center text-green-400 mb-4">
-                    <DollarSign className="w-4 h-4 mr-1" />
-                    <span>{renderPricing(competitor.pricing)}</span>
+          <div className="grid gap-4 md:grid-cols-2">
+            {isLoading ? (
+              Array(4).fill(0).map((_, i) => (
+                <Card key={i} className="p-6 animate-pulse bg-gray-100">
+                  <div className="h-20 bg-gray-200 rounded"></div>
+                </Card>
+              ))
+            ) : (
+              competitors.map((competitor, index) => (
+                <Card 
+                  key={index}
+                  className="p-6 bg-black text-white hover:shadow-lg transition-shadow"
+                >
+                  <h3 className="text-xl font-semibold mb-2">{competitor.name}</h3>
+                  <p className="text-gray-300 mb-4">{competitor.description}</p>
+                  {competitor.pricing && (
+                    <div className="flex items-center text-green-400 mb-4">
+                      <DollarSign className="w-4 h-4 mr-1" />
+                      <span>{renderPricing(competitor.pricing)}</span>
+                    </div>
+                  )}
+                  <div className="flex flex-wrap gap-3">
+                    {competitor.url && (
+                      <a
+                        href={competitor.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center text-blue-300 hover:text-blue-400"
+                      >
+                        <Globe className="w-4 h-4 mr-1" />
+                        Website
+                      </a>
+                    )}
+                    {competitor.linkedin && (
+                      <a
+                        href={competitor.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center text-blue-300 hover:text-blue-400"
+                      >
+                        <Linkedin className="w-4 h-4 mr-1" />
+                        LinkedIn
+                      </a>
+                    )}
+                    {competitor.twitter && (
+                      <a
+                        href={competitor.twitter}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center text-blue-300 hover:text-blue-400"
+                      >
+                        <Twitter className="w-4 h-4 mr-1" />
+                        Twitter
+                      </a>
+                    )}
                   </div>
-                )}
-                <div className="flex flex-wrap gap-3">
-                  {competitor.url && (
-                    <a
-                      href={competitor.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center text-blue-300 hover:text-blue-400"
-                    >
-                      <Globe className="w-4 h-4 mr-1" />
-                      Website
-                    </a>
-                  )}
-                  {competitor.linkedin && (
-                    <a
-                      href={competitor.linkedin}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center text-blue-300 hover:text-blue-400"
-                    >
-                      <Linkedin className="w-4 h-4 mr-1" />
-                      LinkedIn
-                    </a>
-                  )}
-                  {competitor.twitter && (
-                    <a
-                      href={competitor.twitter}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center text-blue-300 hover:text-blue-400"
-                    >
-                      <Twitter className="w-4 h-4 mr-1" />
-                      Twitter
-                    </a>
-                  )}
-                </div>
-              </Card>
-            ))
-          )}
+                </Card>
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>

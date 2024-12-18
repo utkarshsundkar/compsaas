@@ -2,14 +2,19 @@ import jsPDF from 'jspdf';
 import { Competitor } from '../types/competitor';
 
 const COLUMNS = [
-  { header: 'Name', width: 40 },
-  { header: 'Description', width: 70 },
-  { header: 'Pricing', width: 40 },
-  { header: 'Support', width: 40 }
+  { header: 'Name', width: 60 },
+  { header: 'Description', width: 100 },
+  { header: 'Pricing', width: 60 },
+  { header: 'Support', width: 60 }
 ];
 
 export const generateCompetitorPDF = (competitors: Competitor[], searchQuery: string) => {
-  const pdf = new jsPDF();
+  // Create PDF in landscape orientation
+  const pdf = new jsPDF({
+    orientation: 'landscape',
+    unit: 'mm',
+    format: 'a4'
+  });
   
   // Add title
   pdf.setFontSize(20);
@@ -39,7 +44,7 @@ export const generateCompetitorPDF = (competitors: Competitor[], searchQuery: st
   
   // Add competitor data
   competitors.forEach((competitor, index) => {
-    if (yPos > 250) {
+    if (yPos > 180) { // Adjusted for landscape
       pdf.addPage();
       yPos = 20;
     }
