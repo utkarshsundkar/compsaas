@@ -5,21 +5,8 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Search, ExternalLink, DollarSign, Globe, Linkedin, Twitter, FileDown } from 'lucide-react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import jsPDF from 'jspdf';
-
-interface PricingInfo {
-  plan?: string;
-  price?: string;
-}
-
-interface Competitor {
-  name: string;
-  description: string;
-  url?: string;
-  pricing?: string | PricingInfo;
-  linkedin?: string;
-  twitter?: string;
-}
+import { generateCompetitorPDF } from '../utils/pdfGenerator';
+import { Competitor, PricingInfo } from '../types/competitor';
 
 const GEMINI_API_KEY = "AIzaSyBz-z_wmd2rvquybWz3p74JJY_G-zCCqds";
 
@@ -91,48 +78,7 @@ export const SearchCompetitors = () => {
   };
 
   const exportToPDF = () => {
-    const pdf = new jsPDF();
-    let yPos = 20;
-
-    // Add title
-    pdf.setFontSize(20);
-    pdf.text('Competitor Analysis Report', 20, yPos);
-    yPos += 20;
-
-    // Add search query
-    pdf.setFontSize(12);
-    pdf.text(`Analysis for: ${query}`, 20, yPos);
-    yPos += 20;
-
-    competitors.forEach((competitor, index) => {
-      if (yPos > 250) {
-        pdf.addPage();
-        yPos = 20;
-      }
-
-      pdf.setFontSize(14);
-      pdf.text(`${index + 1}. ${competitor.name}`, 20, yPos);
-      yPos += 10;
-
-      pdf.setFontSize(12);
-      // Split description into multiple lines
-      const descLines = pdf.splitTextToSize(competitor.description, 170);
-      pdf.text(descLines, 20, yPos);
-      yPos += descLines.length * 7;
-
-      if (competitor.pricing) {
-        pdf.text(`Pricing: ${renderPricing(competitor.pricing)}`, 20, yPos);
-        yPos += 7;
-      }
-
-      if (competitor.url) {
-        pdf.text(`Website: ${competitor.url}`, 20, yPos);
-        yPos += 7;
-      }
-
-      yPos += 10; // Add space between competitors
-    });
-
+    const pdf = generateCompetitorPDF(competitors, query);
     pdf.save('competitor-analysis.pdf');
     
     toast({
