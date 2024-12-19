@@ -10,11 +10,23 @@ import { SearchSection } from './SearchSection';
 import { CompetitorCard } from './CompetitorCard';
 import { generateCompetitorPDF } from '../utils/pdfGenerator';
 
+// Helper function to add delay between requests
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export const SearchCompetitors = () => {
   const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const { toast } = useToast();
+
+  const handleRateLimit = () => {
+    toast({
+      title: "Rate Limit Reached",
+      description: "Please wait a moment before trying again",
+      variant: "destructive",
+    });
+    setIsLoading(false);
+  };
 
   const searchCompetitors = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +38,7 @@ export const SearchCompetitors = () => {
       const model = genAI.getGenerativeModel({ model: "gemini-pro" });
       
       // First get competitor names
-      const namesPrompt = `List 5 main competitors for ${query}. Return ONLY a JSON array of company names.`;
+      const namesPrompt = `List 5 main competitors for ${query}. Return ONLY a JSON array of company names, without any markdown formatting or code blocks.`;
       const namesResult = await model.generateContent(namesPrompt);
       const namesResponse = await namesResult.response;
       const namesText = namesResponse.text();
@@ -34,35 +46,43 @@ export const SearchCompetitors = () => {
       console.log('Gemini names response:', namesText);
       
       try {
-        const cleanJson = namesText.replace(/```json\n|\n```/g, '').trim();
-        const competitorNames = JSON.parse(cleanJson);
+        const competitorNames = JSON.parse(namesText);
         
-        // Fetch detailed info for each competitor using Gemini
-        const competitorPromises = competitorNames.map(async (name: string) => {
-          const infoPrompt = `For the company ${name}, provide ONLY these specific details:
-          1. Founding date (year)
-          2. Founders names (full names)
-          3. Gold subscription details (if they have one, include its price)
+        // Add delay between requests to avoid rate limiting
+        const competitorPromises = competitorNames.map(async (name: string, index: number) => {
+          // Add a 1-second delay between each request
+          await delay(index * 1000);
           
-          Return as JSON with fields: foundedDate (string), founders (array of strings), goldSubscription (object with price field if exists, or null if no gold subscription).`;
-          
-          const infoResult = await model.generateContent(infoPrompt);
-          const infoResponse = await infoResult.response;
-          const infoText = infoResponse.text();
+          const infoPrompt = `For the company ${name}, provide these specific details in a JSON format without any markdown or code blocks:
+          {
+            "foundedDate": "<year>",
+            "founders": ["<founder1>", "<founder2>"],
+            "goldSubscription": {"price": "<price>"} or null if no gold subscription
+          }`;
           
           try {
-            const cleanInfoJson = infoText.replace(/```json\n|\n```/g, '').trim();
-            const companyInfo = JSON.parse(cleanInfoJson);
+            const infoResult = await model.generateContent(infoPrompt);
+            const infoResponse = await infoResult.response;
+            const infoText = infoResponse.text();
+            
+            const companyInfo = JSON.parse(infoText);
             return {
               name,
-              description: `Founded in ${companyInfo.foundedDate}`,
+              description: `A leading competitor in the ${query} space`,
               founders: companyInfo.founders,
-              goldSubscription: companyInfo.goldSubscription,
-              ...companyInfo
+              foundedDate: companyInfo.foundedDate,
+              goldSubscription: companyInfo.goldSubscription
             };
-          } catch (parseError) {
-            console.error('Failed to parse company info:', parseError);
-            throw new Error('Invalid company data format');
+          } catch (error) {
+            console.error('Failed to fetch company info:', error);
+            // Return partial data if we hit rate limits
+            return {
+              name,
+              description: `A competitor in the ${query} space`,
+              founders: ['Information temporarily unavailable'],
+              foundedDate: 'Information pending',
+              goldSubscription: null
+            };
           }
         });
 
@@ -78,17 +98,21 @@ export const SearchCompetitors = () => {
         console.error('Failed to parse competitor data:', parseError);
         toast({
           title: "Error",
-          description: "Failed to parse competitor data",
+          description: "Failed to parse competitor data. Please try again.",
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Search error:', error);
-      toast({
-        title: "Search Failed",
-        description: "Unable to fetch competitor information. Please try again.",
-        variant: "destructive",
-      });
+      if (error.status === 429) {
+        handleRateLimit();
+      } else {
+        toast({
+          title: "Search Failed",
+          description: "Unable to fetch competitor information. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
