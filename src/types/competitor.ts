@@ -10,4 +10,9 @@ export interface Competitor {
   pricing?: string | PricingInfo;
   linkedin?: string;
   twitter?: string;
+  foundedDate?: string;
+  founders?: string[];
+  funding?: string;
+  services?: string[];
+  goldSubscription?: boolean;
 }
