@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { Search } from 'lucide-react'; // Add this import for the Search icon
+import { GoogleGenerativeAI } from '@google/generative-ai'; // Add this import for Google's AI
 import { useToast } from "@/components/ui/use-toast";
 import { Competitor } from '../types/competitor';
 import { HeroSection } from './HeroSection';
