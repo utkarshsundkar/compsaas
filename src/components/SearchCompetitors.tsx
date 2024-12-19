@@ -14,6 +14,7 @@ export const SearchCompetitors = () => {
   const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
+  const [apiKey, setApiKey] = useState('');
   const { toast } = useToast();
 
   const searchCompetitors = async (e: React.FormEvent) => {
@@ -129,6 +130,8 @@ export const SearchCompetitors = () => {
           isLoading={isLoading}
           showExport={competitors.length > 0}
           onExport={exportToPDF}
+          apiKey={apiKey}
+          onApiKeyChange={setApiKey}
         />
 
         <div className="max-w-7xl mx-auto px-6 pb-16">
