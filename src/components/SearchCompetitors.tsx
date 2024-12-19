@@ -10,7 +10,6 @@ import { SearchSection } from './SearchSection';
 import { CompetitorCard } from './CompetitorCard';
 import { generateCompetitorPDF } from '../utils/pdfGenerator';
 
-// Helper function to add delay between requests
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const SearchCompetitors = () => {
@@ -18,6 +17,13 @@ export const SearchCompetitors = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const { toast } = useToast();
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   const handleRateLimit = () => {
     toast({
@@ -37,7 +43,6 @@ export const SearchCompetitors = () => {
       const genAI = new GoogleGenerativeAI("AIzaSyBz-z_wmd2rvquybWz3p74JJY_G-zCCqds");
       const model = genAI.getGenerativeModel({ model: "gemini-pro" });
       
-      // First get competitor names
       const namesPrompt = `List 5 main competitors for ${query}. Return ONLY a JSON array of company names, without any markdown formatting or code blocks.`;
       const namesResult = await model.generateContent(namesPrompt);
       const namesResponse = await namesResult.response;
@@ -48,9 +53,7 @@ export const SearchCompetitors = () => {
       try {
         const competitorNames = JSON.parse(namesText);
         
-        // Add delay between requests to avoid rate limiting
         const competitorPromises = competitorNames.map(async (name: string, index: number) => {
-          // Add a 1-second delay between each request
           await delay(index * 1000);
           
           const infoPrompt = `For the company ${name}, provide these specific details in a JSON format without any markdown or code blocks:
@@ -75,7 +78,6 @@ export const SearchCompetitors = () => {
             };
           } catch (error) {
             console.error('Failed to fetch company info:', error);
-            // Return partial data if we hit rate limits
             return {
               name,
               description: `A competitor in the ${query} space`,
@@ -128,11 +130,6 @@ export const SearchCompetitors = () => {
     });
   };
 
-  const scrollToSearch = () => {
-    const searchSection = document.getElementById('search-section');
-    searchSection?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   return (
     <div className="min-h-screen bg-white">
       <div className="fixed top-0 left-0 right-0 bg-white z-50 border-b">
@@ -142,17 +139,37 @@ export const SearchCompetitors = () => {
             <span className="font-bold text-xl">Know Your Startup</span>
           </div>
           <div className="flex items-center gap-6">
-            <a href="#" className="text-gray-600 hover:text-gray-900">About</a>
-            <a href="#" className="text-gray-600 hover:text-gray-900">Services</a>
-            <a href="#" className="text-gray-600 hover:text-gray-900">Contact us</a>
-            <a href="#" className="text-gray-600 hover:text-gray-900">Sign in</a>
+            <button 
+              onClick={() => scrollToSection('about-section')} 
+              className="text-gray-600 hover:text-gray-900"
+            >
+              About
+            </button>
+            <button 
+              onClick={() => scrollToSection('services-section')} 
+              className="text-gray-600 hover:text-gray-900"
+            >
+              Services
+            </button>
+            <button 
+              onClick={() => scrollToSection('search-section')} 
+              className="text-gray-600 hover:text-gray-900"
+            >
+              Search
+            </button>
           </div>
         </div>
       </div>
 
-      <HeroSection onTryNowClick={scrollToSearch} />
-      <AboutSection />
-      <ServicesSection />
+      <HeroSection onTryNowClick={() => scrollToSection('search-section')} />
+      
+      <div id="about-section">
+        <AboutSection />
+      </div>
+      
+      <div id="services-section">
+        <ServicesSection />
+      </div>
       
       <div id="search-section">
         <SearchSection
