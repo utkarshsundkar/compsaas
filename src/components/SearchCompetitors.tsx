@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Search } from 'lucide-react'; // Add this import for the Search icon
-import { GoogleGenerativeAI } from '@google/generative-ai'; // Add this import for Google's AI
+import { Search } from 'lucide-react';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { useToast } from "@/components/ui/use-toast";
 import { Competitor } from '../types/competitor';
 import { HeroSection } from './HeroSection';
+import { AboutSection } from './AboutSection';
+import { ServicesSection } from './ServicesSection';
 import { SearchSection } from './SearchSection';
 import { CompetitorCard } from './CompetitorCard';
 import { generateCompetitorPDF } from '../utils/pdfGenerator';
@@ -12,89 +14,47 @@ export const SearchCompetitors = () => {
   const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
-  const [apiKey, setApiKey] = useState('');
   const { toast } = useToast();
-
-  const fetchCompanyInfo = async (companyName: string) => {
-    try {
-      const response = await fetch('https://api.perplexity.ai/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'llama-3.1-sonar-small-128k-online',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are a helpful assistant that provides accurate company information. Return only JSON data.'
-            },
-            {
-              role: 'user',
-              content: `Find detailed information about ${companyName} including: founding date, founders names, funding details, services/features, and subscription plans. Return as JSON with fields: foundedDate, founders (array), funding, services (array), goldSubscription (boolean), description, url, linkedin, twitter.`
-            }
-          ],
-          temperature: 0.2,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch company information');
-      }
-
-      const data = await response.json();
-      console.log('Perplexity API response:', data);
-      
-      try {
-        const parsedInfo = JSON.parse(data.choices[0].message.content);
-        return parsedInfo;
-      } catch (error) {
-        console.error('Failed to parse company info:', error);
-        throw new Error('Invalid company data format');
-      }
-    } catch (error) {
-      console.error('Error fetching company info:', error);
-      throw error;
-    }
-  };
 
   const searchCompetitors = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!apiKey) {
-      toast({
-        title: "API Key Required",
-        description: "Please enter your Perplexity API key to search competitors",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
     console.log('Searching for:', query);
 
     try {
-      // First get competitor names using Gemini
       const genAI = new GoogleGenerativeAI("AIzaSyBz-z_wmd2rvquybWz3p74JJY_G-zCCqds");
       const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-      const prompt = `List 5 main competitors for ${query}. Return ONLY a JSON array of company names.`;
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
       
-      console.log('Gemini response:', text);
+      // First get competitor names
+      const namesPrompt = `List 5 main competitors for ${query}. Return ONLY a JSON array of company names.`;
+      const namesResult = await model.generateContent(namesPrompt);
+      const namesResponse = await namesResult.response;
+      const namesText = namesResponse.text();
+      
+      console.log('Gemini names response:', namesText);
       
       try {
-        const cleanJson = text.replace(/```json\n|\n```/g, '').trim();
+        const cleanJson = namesText.replace(/```json\n|\n```/g, '').trim();
         const competitorNames = JSON.parse(cleanJson);
         
-        // Fetch detailed info for each competitor using Perplexity
+        // Fetch detailed info for each competitor using Gemini
         const competitorPromises = competitorNames.map(async (name: string) => {
-          const companyInfo = await fetchCompanyInfo(name);
-          return {
-            name,
-            ...companyInfo
-          };
+          const infoPrompt = `Find detailed information about ${name} including: founding date, founders names, funding details, services/features, and subscription plans. Return as JSON with fields: foundedDate, founders (array), funding, services (array), goldSubscription (boolean), description, url, linkedin, twitter.`;
+          const infoResult = await model.generateContent(infoPrompt);
+          const infoResponse = await infoResult.response;
+          const infoText = infoResponse.text();
+          
+          try {
+            const cleanInfoJson = infoText.replace(/```json\n|\n```/g, '').trim();
+            const companyInfo = JSON.parse(cleanInfoJson);
+            return {
+              name,
+              ...companyInfo
+            };
+          } catch (parseError) {
+            console.error('Failed to parse company info:', parseError);
+            throw new Error('Invalid company data format');
+          }
         });
 
         const competitorsData = await Promise.all(competitorPromises);
@@ -158,6 +118,8 @@ export const SearchCompetitors = () => {
       </div>
 
       <HeroSection onTryNowClick={scrollToSearch} />
+      <AboutSection />
+      <ServicesSection />
       
       <div id="search-section">
         <SearchSection
@@ -167,8 +129,6 @@ export const SearchCompetitors = () => {
           isLoading={isLoading}
           showExport={competitors.length > 0}
           onExport={exportToPDF}
-          apiKey={apiKey}
-          onApiKeyChange={setApiKey}
         />
 
         <div className="max-w-7xl mx-auto px-6 pb-16">
