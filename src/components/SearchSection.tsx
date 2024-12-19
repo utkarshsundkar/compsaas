@@ -9,8 +9,6 @@ interface SearchSectionProps {
   isLoading: boolean;
   showExport: boolean;
   onExport: () => void;
-  apiKey: string;
-  onApiKeyChange: (value: string) => void;
 }
 
 export const SearchSection = ({ 
@@ -19,9 +17,7 @@ export const SearchSection = ({
   onSearch, 
   isLoading, 
   showExport, 
-  onExport,
-  apiKey,
-  onApiKeyChange
+  onExport
 }: SearchSectionProps) => {
   return (
     <div className="py-16 px-6">
@@ -41,19 +37,6 @@ export const SearchSection = ({
               Export PDF
             </Button>
           )}
-        </div>
-
-        <div className="mb-4">
-          <Input
-            value={apiKey}
-            onChange={(e) => onApiKeyChange(e.target.value)}
-            type="password"
-            placeholder="Enter your Perplexity API key..."
-            className="bg-white border-2 border-black"
-          />
-          <p className="text-sm text-gray-500 mt-1">
-            You need a Perplexity API key to fetch real-time competitor data
-          </p>
         </div>
 
         <form onSubmit={onSearch} className="flex gap-2">
