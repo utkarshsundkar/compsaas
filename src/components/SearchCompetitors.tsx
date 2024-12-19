@@ -40,7 +40,13 @@ export const SearchCompetitors = () => {
         
         // Fetch detailed info for each competitor using Gemini
         const competitorPromises = competitorNames.map(async (name: string) => {
-          const infoPrompt = `Find detailed information about ${name} including: founding date, founders names, funding details, services/features, and subscription plans. Return as JSON with fields: foundedDate, founders (array), funding, services (array), goldSubscription (boolean), description, url, linkedin, twitter.`;
+          const infoPrompt = `For the company ${name}, provide ONLY these specific details:
+          1. Founding date (year)
+          2. Founders names (full names)
+          3. Gold subscription details (if they have one, include its price)
+          
+          Return as JSON with fields: foundedDate (string), founders (array of strings), goldSubscription (object with price field if exists, or null if no gold subscription).`;
+          
           const infoResult = await model.generateContent(infoPrompt);
           const infoResponse = await infoResult.response;
           const infoText = infoResponse.text();
@@ -50,6 +56,9 @@ export const SearchCompetitors = () => {
             const companyInfo = JSON.parse(cleanInfoJson);
             return {
               name,
+              description: `Founded in ${companyInfo.foundedDate}`,
+              founders: companyInfo.founders,
+              goldSubscription: companyInfo.goldSubscription,
               ...companyInfo
             };
           } catch (parseError) {

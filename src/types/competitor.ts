@@ -3,6 +3,11 @@ export interface PricingInfo {
   price?: string;
 }
 
+export interface GoldSubscription {
+  price: string;
+  features?: string[];
+}
+
 export interface Competitor {
   name: string;
   description: string;
@@ -10,9 +15,7 @@ export interface Competitor {
   pricing?: string | PricingInfo;
   linkedin?: string;
   twitter?: string;
-  foundedDate?: string;
-  founders?: string[];
-  funding?: string;
-  services?: string[];
-  goldSubscription?: boolean;
+  foundedDate: string;
+  founders: string[];
+  goldSubscription: GoldSubscription | null;
 }
